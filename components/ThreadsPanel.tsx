@@ -26,74 +26,155 @@ export default function ThreadsPanel({ authors, visibleIds, onToggle, onToggleAl
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Нити памяти"
-        className="absolute top-16 right-3 z-[500] h-11 pl-3 pr-4 bg-white rounded-full shadow-md flex items-center gap-2 hover:bg-stone-50 text-sm font-medium text-stone-900"
+        className="absolute z-[500] inline-flex items-center"
+        style={{
+          top: 84,
+          right: 14,
+          background: 'var(--paper-0)',
+          boxShadow: 'var(--shadow-paper)',
+          border: 'none',
+          borderRadius: 999,
+          padding: '10px 16px 10px 14px',
+          gap: 10,
+          cursor: 'pointer',
+          fontFamily: 'var(--font-text)',
+          fontSize: 13,
+          fontWeight: 500,
+          color: 'var(--paper-700)',
+        }}
       >
         <ThreadsIcon />
-        <span>Нити</span>
-        {authors.length > 0 && (
-          <span className="text-xs text-stone-400 tabular-nums">{authors.length}</span>
-        )}
+        <span>Нити памяти</span>
+        <span
+          className="mono"
+          style={{
+            background: 'var(--paper-100)',
+            color: 'var(--paper-500)',
+            padding: '2px 7px',
+            borderRadius: 999,
+            fontSize: 11,
+          }}
+        >
+          {authors.length}
+        </span>
       </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-[600] bg-black/30 animate-[fadeIn_180ms_ease-out]"
+          className="modal-backdrop fixed inset-0 z-[600]"
+          style={{ background: 'rgba(28,22,12,0.25)' }}
           onClick={() => setOpen(false)}
         >
           <div
-            className="absolute top-16 right-3 w-[min(280px,calc(100vw-1.5rem))] bg-white rounded-xl shadow-xl border border-stone-200 max-h-[70vh] overflow-hidden flex flex-col animate-[slideUp_220ms_ease-out]"
+            className="modal-card absolute"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              top: 84,
+              right: 14,
+              width: 'min(320px, calc(100vw - 28px))',
+              background: 'var(--paper-0)',
+              borderRadius: 16,
+              boxShadow: 'var(--shadow-card)',
+              maxHeight: '70vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
           >
-            <div className="px-3 py-2 border-b border-stone-100 flex items-center">
-              <span className="text-xs uppercase tracking-wider text-stone-500 flex-1">
-                Нити памяти
-              </span>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px 10px',
+                borderBottom: '1px solid var(--line)',
+              }}
+            >
+              <div className="eyebrow">Нити памяти</div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-stone-400 hover:text-stone-900 w-7 h-7 flex items-center justify-center"
                 aria-label="Закрыть"
+                style={{
+                  width: 28,
+                  height: 28,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  color: 'var(--paper-500)',
+                  borderRadius: '50%',
+                }}
               >
                 ✕
               </button>
             </div>
-            <div className="overflow-y-auto p-2">
+
+            <div style={{ overflowY: 'auto', padding: 8 }}>
               {authors.length === 0 ? (
-                <p className="text-xs text-stone-500 px-2 py-3">
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--paper-500)',
+                    padding: '10px 12px',
+                  }}
+                >
                   Пока никто ничего не отметил.
                 </p>
               ) : (
                 <>
-                  <label className="flex items-center gap-3 px-2 py-2 rounded hover:bg-stone-50 cursor-pointer border-b border-stone-100 mb-1">
+                  <label
+                    className="cursor-pointer flex items-center gap-3"
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: 8,
+                      borderBottom: '1px solid var(--line)',
+                      marginBottom: 4,
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={allOn}
                       onChange={() => onToggleAll(!allOn)}
-                      className="w-4 h-4 accent-stone-900"
+                      style={{ width: 16, height: 16, accentColor: 'var(--paper-ink)' }}
                     />
-                    <span className="text-xs uppercase tracking-wider text-stone-500">
-                      Показать все
-                    </span>
+                    <span className="eyebrow">Показать все</span>
                   </label>
                   {authors.map((a) => (
                     <label
                       key={a.id}
-                      className="flex items-center gap-3 px-2 py-2 rounded hover:bg-stone-50 cursor-pointer"
+                      className="cursor-pointer flex items-center gap-3"
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: 8,
+                      }}
                     >
                       <input
                         type="checkbox"
                         checked={visibleIds.has(a.id)}
                         onChange={() => onToggle(a.id)}
-                        className="w-4 h-4 accent-stone-900"
+                        style={{ width: 16, height: 16, accentColor: 'var(--paper-ink)' }}
                       />
                       <span
-                        className="inline-block w-3 h-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: a.color }}
+                        className="inline-block flex-shrink-0"
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          background: a.color,
+                        }}
                       />
-                      <span className="flex-1 text-sm text-stone-800 truncate">
+                      <span
+                        className="flex-1 truncate"
+                        style={{ fontSize: 14, color: 'var(--paper-700)' }}
+                      >
                         {a.username}
                       </span>
-                      <span className="text-xs text-stone-400 tabular-nums">{a.count}</span>
+                      <span
+                        className="mono"
+                        style={{ fontSize: 11, color: 'var(--paper-400)' }}
+                      >
+                        {a.count}
+                      </span>
                     </label>
                   ))}
                 </>
@@ -109,18 +190,20 @@ export default function ThreadsPanel({ authors, visibleIds, onToggle, onToggleAl
 function ThreadsIcon() {
   return (
     <svg
-      width="22"
-      height="22"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
+      <circle cx="5" cy="6" r="1.6" fill="currentColor" />
+      <circle cx="13" cy="11" r="1.6" fill="currentColor" />
+      <circle cx="8" cy="18" r="1.6" fill="currentColor" />
+      <circle cx="19" cy="16" r="1.6" fill="currentColor" />
+      <path d="M5 6L13 11 8 18 19 16" />
     </svg>
   );
 }

@@ -16,42 +16,76 @@ import AddMemoryModal from './AddMemoryModal';
 import ThreadsPanel, { type AuthorInfo } from './ThreadsPanel';
 import MemoryDetail from './MemoryDetail';
 import WelcomeHint from './WelcomeHint';
+import MusicToggle from './MusicToggle';
 
 const ALMATY_CENTER: [number, number] = [43.222, 76.8512];
 const DEFAULT_ZOOM = 12;
 
 function noteSize(count: number): number {
-  if (count <= 1) return 30;
-  if (count <= 3) return 36;
-  if (count <= 6) return 42;
-  if (count <= 12) return 50;
-  return 58;
+  if (count <= 1) return 50;
+  if (count <= 3) return 56;
+  if (count <= 6) return 62;
+  return 68;
 }
 
 function tiltFromId(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-  return ((h % 11) - 5);
+  return (h % 9) - 4;
+}
+
+function escapeAttr(v: string): string {
+  return v.replace(/"/g, '&quot;');
+}
+
+function singleStickerHtml(color: string, rotate: number, isNew: boolean, mini = false): string {
+  const klass = `sticker${isNew ? ' sticker--new' : ''}`;
+  const inner = mini
+    ? '<span class="sticker-lines"><span style="width:70%"></span><span style="width:50%"></span></span>'
+    : '<span class="sticker-lines"><span style="width:80%"></span><span style="width:60%"></span><span style="width:70%"></span></span>';
+  return `<div class="${klass}" style="--c:${escapeAttr(color)};--rot:${rotate}deg;width:80%;height:80%;padding:8px">${inner}</div>`;
 }
 
 function makeMarkerIcon(id: string, color: string, count: number, pulse: boolean): L.DivIcon {
   const size = noteSize(count);
   const tilt = tiltFromId(id);
-  const label = count > 1 ? String(count) : '';
-  const pulseHtml = pulse
-    ? `<span class="memory-marker-pulse" style="background:${color};border-radius:6px"></span>
-       <span class="memory-marker-pulse memory-marker-pulse-2" style="background:${color};border-radius:6px"></span>`
-    : '';
-  const stackHtml =
-    count > 1
-      ? `<span class="sticky-note-stack" style="background:${color};opacity:0.85;transform:translate(3px,3px) rotate(${tilt + 4}deg)"></span>
-         <span class="sticky-note-stack" style="background:${color};opacity:0.92;transform:translate(1.5px,1.5px) rotate(${tilt + 2}deg)"></span>`
-      : '';
+  const padding = 16;
+  const total = size + padding;
+
+  let html: string;
+  if (count <= 1) {
+    html = `
+      <div style="position:relative;width:${size}px;height:${size}px">
+        ${singleStickerHtml(color, tilt, pulse)}
+      </div>
+    `;
+  } else {
+    const visible = Math.min(count, 3);
+    const stackColors = [color, 'var(--u-08)', 'var(--u-15)'].slice(0, visible);
+    const layers = stackColors
+      .map((c, i) => {
+        const offsetX = (i - 1) * 5;
+        const offsetY = (i - 1) * -4;
+        const rot = tilt + (i - 1) * 6;
+        const klass = `sticker${pulse && i === 0 ? ' sticker--new' : ''}`;
+        return `<div class="${klass}" style="--c:${escapeAttr(c)};--rot:${rot}deg;position:absolute;inset:0;width:${size - 8}px;height:${size - 8}px;padding:6px;transform:translate(${offsetX}px,${offsetY}px) rotate(${rot}deg);z-index:${visible - i}">
+          <span class="sticker-lines"><span style="width:70%"></span><span style="width:50%"></span></span>
+        </div>`;
+      })
+      .join('');
+    html = `
+      <div style="position:relative;width:${size}px;height:${size}px">
+        ${layers}
+        <span class="cluster-count">${count}</span>
+      </div>
+    `;
+  }
+
   return L.divIcon({
     className: 'memory-marker',
-    iconSize: [size + 12, size + 12],
-    iconAnchor: [(size + 12) / 2, (size + 12) / 2],
-    html: `<div class="memory-marker-wrap">${pulseHtml}${stackHtml}<div class="sticky-note" style="width:${size}px;height:${size}px;background:${color};transform:rotate(${tilt}deg)"><span class="sticky-note-count">${label}</span></div></div>`,
+    iconSize: [total, total],
+    iconAnchor: [total / 2, total / 2],
+    html: `<div style="position:relative;width:${total}px;height:${total}px;display:flex;align-items:center;justify-content:center">${html}</div>`,
   });
 }
 
@@ -105,9 +139,21 @@ function LocateControl({ onLocate }: { onLocate: (lat: number, lng: number) => v
       onClick={go}
       disabled={busy}
       aria-label="Моё местоположение"
-      className="absolute bottom-24 right-3 z-[500] w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-stone-50 disabled:opacity-50"
+      className="absolute z-[500] flex items-center justify-center disabled:opacity-50"
+      style={{
+        right: 14,
+        bottom: 200,
+        width: 48,
+        height: 48,
+        borderRadius: '50%',
+        background: 'var(--paper-0)',
+        boxShadow: 'var(--shadow-card)',
+        border: 'none',
+        cursor: 'pointer',
+        color: 'var(--paper-700)',
+      }}
     >
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
         <circle cx="12" cy="12" r="3" />
         <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
       </svg>
@@ -258,13 +304,13 @@ export default function MemoryMap({ user, initialMemories }: Props) {
         <MapClickHandler enabled={!!user} onClick={onMapClick} />
 
         {clusters.map((c) => {
-          const dominantColor = c.memories.length === 1 ? c.memories[0].color : '#1c1917';
+          const firstColor = c.memories[0].color;
           const pulse = c.memories.some((m) => recentlyAddedIds.has(m.id));
           return (
             <Marker
               key={c.id}
               position={[c.lat, c.lng]}
-              icon={makeMarkerIcon(c.id, dominantColor, c.memories.length, pulse)}
+              icon={makeMarkerIcon(c.id, firstColor, c.memories.length, pulse)}
               eventHandlers={{
                 click: () => setOpenCluster(c.memories),
               }}
@@ -279,7 +325,13 @@ export default function MemoryMap({ user, initialMemories }: Props) {
             <Polyline
               key={userId}
               positions={positions}
-              pathOptions={{ color: items[0].color, weight: 3, opacity: 0.7 }}
+              pathOptions={{
+                color: items[0].color,
+                weight: 2.5,
+                opacity: 1,
+                dashArray: '1 6',
+                lineCap: 'round',
+              }}
             />
           );
         })}
@@ -296,6 +348,7 @@ export default function MemoryMap({ user, initialMemories }: Props) {
       </MapContainer>
 
       <WelcomeHint user={user} />
+      <MusicToggle />
 
       <ThreadsPanel
         authors={authors}
@@ -305,12 +358,30 @@ export default function MemoryMap({ user, initialMemories }: Props) {
       />
 
       {!user && (
-        <a
-          href="/login"
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500] h-12 px-6 rounded-full bg-stone-900 text-white text-sm font-medium shadow-lg flex items-center hover:bg-stone-800"
+        <div
+          className="absolute z-[500]"
+          style={{
+            bottom: 28,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--paper-0)',
+            borderRadius: 999,
+            padding: '8px 8px 8px 18px',
+            boxShadow: 'var(--shadow-card)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 12,
+            fontSize: 13,
+            color: 'var(--paper-700)',
+            fontWeight: 500,
+            maxWidth: 'calc(100vw - 28px)',
+          }}
         >
-          Войти, чтобы добавить место
-        </a>
+          <span style={{ whiteSpace: 'nowrap' }}>Войти, чтобы добавить место</span>
+          <a href="/login" className="btn btn--primary" style={{ padding: '8px 14px', fontSize: 13 }}>
+            Войти
+          </a>
+        </div>
       )}
 
       {pending && (

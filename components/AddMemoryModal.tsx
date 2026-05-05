@@ -10,18 +10,11 @@ type Props = {
   onSubmit: (text: string) => Promise<void>;
 };
 
-const PROMPTS = [
-  'Что здесь для вас?',
-  'Какое воспоминание здесь живёт?',
-  'Что вы чувствуете, проходя здесь?',
-];
-
 export default function AddMemoryModal({ lat, lng, onCancel, onSubmit }: Props) {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const [prompt] = useState(() => PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
 
   useEffect(() => {
     const t = setTimeout(() => ref.current?.focus(), 220);
@@ -44,63 +37,130 @@ export default function AddMemoryModal({ lat, lng, onCancel, onSubmit }: Props) 
     }
   }
 
+  const counterColor = text.length > MAX_ASSOCIATION_LEN - 20 ? 'var(--warn)' : 'var(--paper-400)';
+
   return (
     <div
-      className="fixed inset-0 z-[1000] bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-[fadeIn_180ms_ease-out]"
+      className="fixed inset-0 z-[1000]"
       onClick={onCancel}
     >
       <div
-        className="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-xl animate-[slideUp_240ms_cubic-bezier(0.2,0.9,0.3,1.2)]"
+        className="modal-backdrop absolute inset-0"
+        style={{ background: 'rgba(28,22,12,0.32)', backdropFilter: 'blur(2px)' }}
+      />
+      <div
+        className="sheet absolute left-0 right-0 bottom-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: 460,
+          margin: '0 auto',
+          width: '100%',
+        }}
       >
-        <div className="flex items-start justify-between mb-1">
-          <h2 className="text-lg font-semibold tracking-tight">{prompt}</h2>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-stone-400 hover:text-stone-900 -mt-1 -mr-1 w-11 h-11 flex items-center justify-center"
-            aria-label="Закрыть"
-          >
-            ✕
-          </button>
-        </div>
-        <p className="text-xs text-stone-500 mb-4 font-mono">
-          {lat.toFixed(5)}, {lng.toFixed(5)}
-        </p>
+        <div
+          style={{
+            background: 'var(--paper-0)',
+            borderRadius: '20px 20px 0 0',
+            padding: '20px 22px 22px',
+            boxShadow: 'var(--shadow-modal)',
+          }}
+        >
+          <div
+            style={{
+              width: 36,
+              height: 4,
+              borderRadius: 999,
+              background: 'var(--paper-200)',
+              margin: '-4px auto 14px',
+            }}
+          />
 
-        <textarea
-          ref={ref}
-          value={text}
-          onChange={(e) => setText(e.target.value.slice(0, MAX_ASSOCIATION_LEN))}
-          maxLength={MAX_ASSOCIATION_LEN}
-          rows={4}
-          placeholder="Воспоминание, ассоциация, чувство…"
-          className="w-full p-3 rounded-lg border border-stone-300 focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-base resize-none"
-        />
-        <div className="flex items-center justify-between mt-2 mb-4">
-          <span className="text-xs text-stone-400 tabular-nums">
-            {text.length} / {MAX_ASSOCIATION_LEN}
-          </span>
-          {error && <span className="text-xs text-red-600">{error}</span>}
-        </div>
+          <div
+            className="mono"
+            style={{
+              fontSize: 11,
+              color: 'var(--paper-500)',
+              letterSpacing: '0.06em',
+              marginBottom: 14,
+            }}
+          >
+            {lat.toFixed(5)}, {lng.toFixed(5)}
+          </div>
 
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={submitting}
-            className="flex-1 h-12 rounded-lg border border-stone-300 hover:bg-stone-100 disabled:opacity-50 transition"
+          <h3
+            className="display"
+            style={{
+              fontSize: 22,
+              margin: '0 0 12px',
+              fontWeight: 400,
+              letterSpacing: '-0.01em',
+            }}
           >
-            Отмена
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting || !text.trim()}
-            className="flex-1 h-12 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            Что для вас здесь?
+          </h3>
+
+          <textarea
+            ref={ref}
+            value={text}
+            onChange={(e) => setText(e.target.value.slice(0, MAX_ASSOCIATION_LEN))}
+            maxLength={MAX_ASSOCIATION_LEN}
+            rows={5}
+            placeholder="Воспоминание, чувство, маленькая история…"
+            className="field"
+            style={{
+              resize: 'none',
+              fontSize: 14,
+              lineHeight: 1.5,
+            }}
+          />
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 12,
+              gap: 12,
+            }}
           >
-            {submitting ? '…' : 'Оставить'}
-          </button>
+            <span
+              className="mono"
+              style={{ fontSize: 11, color: counterColor }}
+            >
+              {text.length} / {MAX_ASSOCIATION_LEN}
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={submitting}
+                className="btn btn--ghost"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting || !text.trim()}
+                className="btn btn--primary"
+              >
+                {submitting ? '…' : 'Оставить'}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <p
+              style={{
+                fontSize: 12,
+                color: 'var(--error)',
+                marginTop: 10,
+              }}
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </div>

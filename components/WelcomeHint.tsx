@@ -3,7 +3,13 @@
 import { useEffect, useState } from 'react';
 import type { PublicUser } from '@/lib/types';
 
-const STORAGE_KEY = 'almaty_welcome_dismissed_v2';
+const STORAGE_KEY = 'almaty_welcome_dismissed_v3';
+
+const STEPS = [
+  { n: 1, title: 'Тапните по карте', body: 'Найдите место в Алматы, которое для вас что-то значит.' },
+  { n: 2, title: 'Оставьте заметку', body: 'До 200 символов — воспоминание, чувство, история.' },
+  { n: 3, title: 'Прочтите чужие', body: 'Стикеры людей складываются в нити памяти по всему городу.' },
+];
 
 export default function WelcomeHint({ user }: { user: PublicUser | null }) {
   const [shown, setShown] = useState(false);
@@ -28,77 +34,138 @@ export default function WelcomeHint({ user }: { user: PublicUser | null }) {
 
   return (
     <div
-      className="fixed inset-0 z-[1100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-[fadeIn_220ms_ease-out]"
+      className="modal-backdrop fixed inset-0 z-[1100] flex items-center justify-center"
+      style={{ background: 'rgba(28,22,12,0.42)', backdropFilter: 'blur(2px)', padding: 16 }}
       onClick={dismiss}
     >
       <div
-        className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-[slideUp_280ms_cubic-bezier(0.2,0.9,0.3,1.2)]"
+        className="modal-card"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxWidth: 460,
+          background: 'var(--paper-0)',
+          borderRadius: 20,
+          boxShadow: 'var(--shadow-modal)',
+          padding: '28px 22px 22px',
+        }}
       >
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 rounded-2xl bg-yellow-100 flex items-center justify-center text-3xl">
-            📍
-          </div>
+        <div className="eyebrow" style={{ marginBottom: 14 }}>
+          Городской архив воспоминаний
         </div>
-
-        <h2 className="text-xl font-semibold tracking-tight text-center mb-2">
-          Алматы помнит
+        <h2
+          className="display"
+          style={{
+            fontSize: 30,
+            margin: '0 0 8px',
+            lineHeight: 1.05,
+          }}
+        >
+          Алматы
+          <br />
+          помнит
         </h2>
-        <p className="text-sm text-stone-600 text-center mb-5 leading-relaxed">
-          Это карта памяти города. Каждый отмечает места, важные для него — и из заметок
-          незнакомцев складывается общий портрет Алматы.
+        <p
+          style={{
+            margin: '0 0 26px',
+            color: 'var(--paper-500)',
+            fontSize: 14,
+            lineHeight: 1.5,
+          }}
+        >
+          Карта общих воспоминаний о городе. Каждая точка — чья-то история.
         </p>
 
-        <div className="space-y-3 mb-6">
-          <Step n={1} text="Полистайте карту — другие уже оставили свои места." />
-          <Step
-            n={2}
-            text={
-              user
-                ? 'Нажмите на любую точку, чтобы оставить там свою заметку.'
-                : 'Войдите, чтобы добавить своё место.'
-            }
-          />
-          <Step n={3} text="Открывайте чужие заметки, ставьте лайки, оставляйте комментарии." />
-        </div>
+        <ol
+          style={{
+            listStyle: 'none',
+            padding: 0,
+            margin: '0 0 24px',
+            display: 'grid',
+            gap: 16,
+          }}
+        >
+          {STEPS.map((s) => (
+            <li key={s.n} style={{ display: 'flex', gap: 14 }}>
+              <span
+                className="display"
+                style={{
+                  width: 32,
+                  height: 32,
+                  flex: '0 0 auto',
+                  background: 'var(--paper-100)',
+                  borderRadius: 8,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: 'var(--paper-ink)',
+                }}
+              >
+                {s.n}
+              </span>
+              <div>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 14,
+                    color: 'var(--paper-ink)',
+                    marginBottom: 2,
+                  }}
+                >
+                  {s.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: 'var(--paper-500)',
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {s.body}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
 
         {user ? (
           <button
             type="button"
             onClick={dismiss}
-            className="w-full h-12 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800 transition"
+            className="btn btn--primary"
+            style={{ width: '100%', padding: '14px 20px', fontSize: 14 }}
           >
-            Понятно, начинаем
+            Начать
           </button>
         ) : (
-          <div className="flex gap-2">
+          <>
+            <a
+              href="/login"
+              className="btn btn--primary"
+              style={{ width: '100%', padding: '14px 20px', fontSize: 14 }}
+            >
+              Войти и начать
+            </a>
             <button
               type="button"
               onClick={dismiss}
-              className="flex-1 h-12 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-100 transition"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                width: '100%',
+                padding: '12px 0 0',
+                fontSize: 13,
+                color: 'var(--paper-500)',
+              }}
             >
-              Просто посмотреть
+              Просто посмотреть карту
             </button>
-            <a
-              href="/login"
-              className="flex-1 h-12 rounded-lg bg-stone-900 text-white font-medium hover:bg-stone-800 transition flex items-center justify-center"
-            >
-              Войти
-            </a>
-          </div>
+          </>
         )}
       </div>
-    </div>
-  );
-}
-
-function Step({ n, text }: { n: number; text: string }) {
-  return (
-    <div className="flex gap-3 items-start">
-      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-100 text-stone-700 text-xs font-semibold flex items-center justify-center mt-0.5">
-        {n}
-      </span>
-      <p className="text-sm text-stone-700 leading-snug">{text}</p>
     </div>
   );
 }
